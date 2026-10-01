@@ -29,6 +29,7 @@ struct status_state {
     bool profiles_bonded[NICEVIEW_PROFILE_COUNT];
     uint8_t layer_index;
     const char *layer_label;
+    bool caps_lock;
 #else
     bool connected;
     bool volume_known;

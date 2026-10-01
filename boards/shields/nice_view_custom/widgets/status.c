@@ -21,6 +21,8 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/events/ble_active_profile_changed.h>
 #include <zmk/events/endpoint_changed.h>
 #include <zmk/events/layer_state_changed.h>
+#include <zmk/events/hid_indicators_changed.h>
+#include <zmk/hid_indicators.h>
 #include <zmk/usb.h>
 #include <zmk/ble.h>
 #include <zmk/endpoints.h>
@@ -51,8 +53,11 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
 
     lv_draw_label_dsc_t label_dsc;
     init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_16, LV_TEXT_ALIGN_RIGHT);
-    lv_draw_label_dsc_t label_dsc_output;
-    init_label_dsc(&label_dsc_output, LVGL_FOREGROUND, &lv_font_montserrat_18,
+    lv_draw_label_dsc_t label_dsc_caps;
+    init_label_dsc(&label_dsc_caps, LVGL_FOREGROUND, &lv_font_montserrat_18,
+                   LV_TEXT_ALIGN_CENTER);
+    lv_draw_label_dsc_t label_dsc_caps_on;
+    init_label_dsc(&label_dsc_caps_on, LVGL_BACKGROUND, &lv_font_montserrat_18,
                    LV_TEXT_ALIGN_CENTER);
     lv_draw_rect_dsc_t rect_black_dsc;
     init_rect_dsc(&rect_black_dsc, LVGL_BACKGROUND);
@@ -61,6 +66,15 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
 
     // Fill background
     lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
+
+    // Caps Lock: solid box with "CAPS" when on, outlined "caps" when off
+    lv_canvas_draw_rect(canvas, 4, 28, 60, 30, &rect_white_dsc);
+    if (!state->caps_lock) {
+        lv_canvas_draw_rect(canvas, 5, 29, 58, 28, &rect_black_dsc);
+    }
+    lv_canvas_draw_text(canvas, 4, 33, 60,
+                        state->caps_lock ? &label_dsc_caps_on : &label_dsc_caps,
+                        state->caps_lock ? "CAPS" : "caps");
 
     // Draw battery
     draw_battery(canvas, state);
@@ -86,18 +100,6 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
     }
 
     lv_canvas_draw_text(canvas, 0, 0, CANVAS_SIZE, &label_dsc, output_text);
-
-    // Active device, in the box the WPM graph used to fill (the layer circles took its old spot)
-    lv_canvas_draw_rect(canvas, 0, 21, 68, 42, &rect_white_dsc);
-    lv_canvas_draw_rect(canvas, 1, 22, 66, 40, &rect_black_dsc);
-
-    char device_text[8] = {};
-    if (state->selected_endpoint.transport == ZMK_TRANSPORT_USB) {
-        strcpy(device_text, "USB");
-    } else {
-        snprintf(device_text, sizeof(device_text), "BT %d", state->active_profile_index + 1);
-    }
-    lv_canvas_draw_text(canvas, 0, 32, CANVAS_SIZE, &label_dsc_output, device_text);
 
     // Rotate canvas
     rotate_canvas(canvas, cbuf);
@@ -157,16 +159,14 @@ static void draw_bottom(lv_obj_t *widget, lv_color_t cbuf[], const struct status
     // Fill background
     lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
 
-    // Draw layer
-    if (state->layer_label == NULL || strlen(state->layer_label) == 0) {
-        char text[10] = {};
-
-        sprintf(text, "LAYER %i", state->layer_index);
-
-        lv_canvas_draw_text(canvas, 0, 5, 68, &label_dsc, text);
+    // Active device (the layer is shown by the circles above): "USB" or "DEVICE 1"-"DEVICE 5"
+    char text[10] = {};
+    if (state->selected_endpoint.transport == ZMK_TRANSPORT_USB) {
+        strcpy(text, "USB");
     } else {
-        lv_canvas_draw_text(canvas, 0, 5, 68, &label_dsc, state->layer_label);
+        snprintf(text, sizeof(text), "DEVICE %d", state->active_profile_index + 1);
     }
+    lv_canvas_draw_text(canvas, 0, 5, 68, &label_dsc, text);
 
     // Rotate canvas
     rotate_canvas(canvas, cbuf);
@@ -220,6 +220,7 @@ static void set_output_status(struct zmk_widget_status *widget,
     }
 
     draw_top(widget->obj, widget->cbuf, &widget->state);
+    draw_bottom(widget->obj, widget->cbuf3, &widget->state);
 }
 
 static void output_status_update_cb(struct output_status_state state) {
@@ -257,7 +258,6 @@ static void set_layer_status(struct zmk_widget_status *widget, struct layer_stat
     widget->state.layer_label = state.label;
 
     draw_middle(widget->obj, widget->cbuf2, &widget->state);
-    draw_bottom(widget->obj, widget->cbuf3, &widget->state);
 }
 
 static void layer_status_update_cb(struct layer_status_state state) {
@@ -276,6 +276,36 @@ ZMK_DISPLAY_WIDGET_LISTENER(widget_layer_status, struct layer_status_state, laye
 
 ZMK_SUBSCRIPTION(widget_layer_status, zmk_layer_state_changed);
 
+// Host lock-key LEDs: bit 0 Num Lock, bit 1 Caps Lock, bit 2 Scroll Lock.
+#define CAPS_LOCK_BIT BIT(1)
+
+struct caps_lock_status_state {
+    bool active;
+};
+
+static void set_caps_lock_status(struct zmk_widget_status *widget,
+                                 struct caps_lock_status_state state) {
+    widget->state.caps_lock = state.active;
+
+    draw_top(widget->obj, widget->cbuf, &widget->state);
+}
+
+static void caps_lock_status_update_cb(struct caps_lock_status_state state) {
+    struct zmk_widget_status *widget;
+    SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) { set_caps_lock_status(widget, state); }
+}
+
+static struct caps_lock_status_state caps_lock_status_get_state(const zmk_event_t *eh) {
+    return (struct caps_lock_status_state){
+        .active = (zmk_hid_indicators_get_current_profile() & CAPS_LOCK_BIT) != 0};
+}
+
+ZMK_DISPLAY_WIDGET_LISTENER(widget_caps_lock_status, struct caps_lock_status_state,
+                            caps_lock_status_update_cb, caps_lock_status_get_state)
+ZMK_SUBSCRIPTION(widget_caps_lock_status, zmk_hid_indicators_changed);
+// Each device keeps its own lock state, so re-read it when switching devices.
+ZMK_SUBSCRIPTION(widget_caps_lock_status, zmk_endpoint_changed);
+
 int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
     widget->obj = lv_obj_create(parent);
     lv_obj_set_size(widget->obj, 160, 68);
@@ -293,6 +323,7 @@ int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
     widget_battery_status_init();
     widget_output_status_init();
     widget_layer_status_init();
+    widget_caps_lock_status_init();
 
     return 0;
 }
