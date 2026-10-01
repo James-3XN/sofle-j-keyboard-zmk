@@ -29,8 +29,10 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/keymap.h>
 
 // Layer circles for layers 0-2 in the middle section, styled like the stock profile circles:
-// 0 and 1 on top, 2 centred below them.
+// 0 and 1 in the top corners, 2 centred at the bottom, so they can be larger than the stock 13.
 #define LAYER_SLOTS 3
+#define LAYER_RADIUS 15
+#define LAYER_FILL_RADIUS 11
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -113,7 +115,7 @@ static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status
     lv_draw_arc_dsc_t arc_dsc;
     init_arc_dsc(&arc_dsc, LVGL_FOREGROUND, 2);
     lv_draw_arc_dsc_t arc_dsc_filled;
-    init_arc_dsc(&arc_dsc_filled, LVGL_FOREGROUND, 9);
+    init_arc_dsc(&arc_dsc_filled, LVGL_FOREGROUND, LAYER_FILL_RADIUS);
     lv_draw_label_dsc_t label_dsc;
     init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_18, LV_TEXT_ALIGN_CENTER);
     lv_draw_label_dsc_t label_dsc_black;
@@ -124,7 +126,7 @@ static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status
     lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
 
     static const int layer_offsets[LAYER_SLOTS][2] = {
-        {13, 13}, {55, 13}, {34, 34},
+        {16, 16}, {52, 16}, {34, 51},
     };
 
     int layer_count = MIN(ZMK_KEYMAP_LAYERS_LEN, LAYER_SLOTS);
@@ -135,9 +137,9 @@ static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status
         int x = layer_offsets[i][0];
         int y = layer_offsets[i][1];
 
-        lv_canvas_draw_arc(canvas, x, y, 13, 0, 360, &arc_dsc);
+        lv_canvas_draw_arc(canvas, x, y, LAYER_RADIUS, 0, 360, &arc_dsc);
         if (selected) {
-            lv_canvas_draw_arc(canvas, x, y, 9, 0, 359, &arc_dsc_filled);
+            lv_canvas_draw_arc(canvas, x, y, LAYER_FILL_RADIUS, 0, 359, &arc_dsc_filled);
         }
 
         char label[2];
