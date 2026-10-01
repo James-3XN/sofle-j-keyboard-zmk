@@ -28,9 +28,9 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/endpoints.h>
 #include <zmk/keymap.h>
 
-// Layer circles drawn in the middle section, in two rows of three: 0 1 2 / 3 4 5.
-#define LAYER_SLOTS 6
-#define LAYER_RADIUS 10
+// Layer circles for layers 0-2 in the middle section, styled like the stock profile circles:
+// 0 and 1 on top, 2 centred below them.
+#define LAYER_SLOTS 3
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -113,34 +113,36 @@ static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status
     lv_draw_arc_dsc_t arc_dsc;
     init_arc_dsc(&arc_dsc, LVGL_FOREGROUND, 2);
     lv_draw_arc_dsc_t arc_dsc_filled;
-    init_arc_dsc(&arc_dsc_filled, LVGL_FOREGROUND, LAYER_RADIUS);
+    init_arc_dsc(&arc_dsc_filled, LVGL_FOREGROUND, 9);
     lv_draw_label_dsc_t label_dsc;
-    init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_14, LV_TEXT_ALIGN_CENTER);
+    init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_18, LV_TEXT_ALIGN_CENTER);
     lv_draw_label_dsc_t label_dsc_black;
-    init_label_dsc(&label_dsc_black, LVGL_BACKGROUND, &lv_font_montserrat_14,
+    init_label_dsc(&label_dsc_black, LVGL_BACKGROUND, &lv_font_montserrat_18,
                    LV_TEXT_ALIGN_CENTER);
 
     // Fill background
     lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
 
     static const int layer_offsets[LAYER_SLOTS][2] = {
-        {11, 17}, {34, 17}, {57, 17}, {11, 51}, {34, 51}, {57, 51},
+        {13, 13}, {55, 13}, {34, 34},
     };
 
-    // Only layers that exist in the keymap get a circle; the active one is filled in.
     int layer_count = MIN(ZMK_KEYMAP_LAYERS_LEN, LAYER_SLOTS);
 
+    // Outline ring for each layer; the active one also gets a filled centre with a cut-out number.
     for (int i = 0; i < layer_count; i++) {
         bool selected = i == state->layer_index;
         int x = layer_offsets[i][0];
         int y = layer_offsets[i][1];
 
-        lv_canvas_draw_arc(canvas, x, y, LAYER_RADIUS, 0, 360,
-                           selected ? &arc_dsc_filled : &arc_dsc);
+        lv_canvas_draw_arc(canvas, x, y, 13, 0, 360, &arc_dsc);
+        if (selected) {
+            lv_canvas_draw_arc(canvas, x, y, 9, 0, 359, &arc_dsc_filled);
+        }
 
         char label[2];
         snprintf(label, sizeof(label), "%d", i);
-        lv_canvas_draw_text(canvas, x - 8, y - 8, 16, (selected ? &label_dsc_black : &label_dsc),
+        lv_canvas_draw_text(canvas, x - 8, y - 10, 16, (selected ? &label_dsc_black : &label_dsc),
                             label);
     }
 

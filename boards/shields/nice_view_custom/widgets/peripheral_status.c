@@ -26,9 +26,13 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include "peripheral_status.h"
 #include "volume_sync.h"
 
+// The bars run down the screen under the battery: bars 10-7 sit in the top section and bars 6-1
+// in the middle one. With these sizes no bar crosses the boundary between the two (y = 68).
 #define VOLUME_BARS 10
-#define VOLUME_BAR_HEIGHT 5
+#define VOLUME_BAR_HEIGHT 9
 #define VOLUME_BAR_GAP 2
+#define VOLUME_BARS_TOP 24
+#define VOLUME_BARS_IN_TOP 4
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -41,6 +45,31 @@ struct volume_status_state {
     bool muted;
     uint8_t steps;
 };
+
+// Draw bar rows first..last (row 0 = top bar = bar 10), shifted up by y_offset for this section.
+static void draw_volume_bar_rows(lv_obj_t *canvas, const struct status_state *state, int first,
+                                 int last, int y_offset) {
+    lv_draw_rect_dsc_t rect_black_dsc;
+    init_rect_dsc(&rect_black_dsc, LVGL_BACKGROUND);
+    lv_draw_rect_dsc_t rect_white_dsc;
+    init_rect_dsc(&rect_white_dsc, LVGL_FOREGROUND);
+
+    int per_bar = VOLUME_SYNC_STEPS / VOLUME_BARS;
+    int lit = (state->volume_known && !state->volume_muted)
+                  ? (state->volume_steps + per_bar - 1) / per_bar
+                  : 0;
+
+    for (int i = first; i <= last; i++) {
+        int bar = VOLUME_BARS - i;
+        int y = VOLUME_BARS_TOP + i * (VOLUME_BAR_HEIGHT + VOLUME_BAR_GAP) - y_offset;
+
+        lv_canvas_draw_rect(canvas, 2, y, CANVAS_SIZE - 4, VOLUME_BAR_HEIGHT, &rect_white_dsc);
+        if (bar > lit) {
+            lv_canvas_draw_rect(canvas, 3, y + 1, CANVAS_SIZE - 6, VOLUME_BAR_HEIGHT - 2,
+                                &rect_black_dsc);
+        }
+    }
+}
 
 static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_state *state) {
     lv_obj_t *canvas = lv_obj_get_child(widget, 0);
@@ -60,37 +89,25 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
     lv_canvas_draw_text(canvas, 0, 0, CANVAS_SIZE, &label_dsc,
                         state->connected ? LV_SYMBOL_WIFI : LV_SYMBOL_CLOSE);
 
+    // Top four volume bars
+    draw_volume_bar_rows(canvas, state, 0, VOLUME_BARS_IN_TOP - 1, 0);
+
     // Rotate canvas
     rotate_canvas(canvas, cbuf);
 }
 
 // Ten stacked bars, filled from the bottom up; each bar is 5 volume steps (10%).
+// This draws the lower six; draw_top() draws the upper four.
 static void draw_volume_bars(lv_obj_t *widget, lv_color_t cbuf[],
                              const struct status_state *state) {
     lv_obj_t *canvas = lv_obj_get_child(widget, 1);
 
     lv_draw_rect_dsc_t rect_black_dsc;
     init_rect_dsc(&rect_black_dsc, LVGL_BACKGROUND);
-    lv_draw_rect_dsc_t rect_white_dsc;
-    init_rect_dsc(&rect_white_dsc, LVGL_FOREGROUND);
 
     lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
 
-    int per_bar = VOLUME_SYNC_STEPS / VOLUME_BARS;
-    int lit = (state->volume_known && !state->volume_muted)
-                  ? (state->volume_steps + per_bar - 1) / per_bar
-                  : 0;
-
-    for (int i = 0; i < VOLUME_BARS; i++) {
-        int bar = VOLUME_BARS - i; // top row is bar 10
-        int y = i * (VOLUME_BAR_HEIGHT + VOLUME_BAR_GAP);
-
-        lv_canvas_draw_rect(canvas, 2, y, CANVAS_SIZE - 4, VOLUME_BAR_HEIGHT, &rect_white_dsc);
-        if (bar > lit) {
-            lv_canvas_draw_rect(canvas, 3, y + 1, CANVAS_SIZE - 6, VOLUME_BAR_HEIGHT - 2,
-                                &rect_black_dsc);
-        }
-    }
+    draw_volume_bar_rows(canvas, state, VOLUME_BARS_IN_TOP, VOLUME_BARS - 1, CANVAS_SIZE);
 
     rotate_canvas(canvas, cbuf);
 }
@@ -186,6 +203,7 @@ static void set_volume_status(struct zmk_widget_status *widget, struct volume_st
     widget->state.volume_muted = state.muted;
     widget->state.volume_steps = state.steps;
 
+    draw_top(widget->obj, widget->cbuf, &widget->state);
     draw_volume_bars(widget->obj, widget->cbuf2, &widget->state);
     draw_volume_label(widget->obj, widget->cbuf3, &widget->state);
 }
@@ -228,6 +246,7 @@ int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
     lv_canvas_set_buffer(bottom, widget->cbuf3, CANVAS_SIZE, CANVAS_SIZE, LV_IMG_CF_TRUE_COLOR);
 
     // Empty bars and "VOL" until the first update arrives from the left half.
+    draw_top(widget->obj, widget->cbuf, &widget->state);
     draw_volume_bars(widget->obj, widget->cbuf2, &widget->state);
     draw_volume_label(widget->obj, widget->cbuf3, &widget->state);
 
