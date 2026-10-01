@@ -8,7 +8,14 @@ manifest:
       # - https://docs.zephyrproject.org/3.5.0/develop/west/manifest.html#projects
   #  - name: gpeye
   #    url-base: https://github.com/GPeye
+    - name: zzeneg
+      url-base: https://github.com/zzeneg
   projects:
+    # Lets the PC send data (the real volume) to the keyboard over USB or Bluetooth.
+    # Pinned to a reviewed commit so builds don't change when upstream does.
+    - name: zmk-raw-hid
+      remote: zzeneg
+      revision: 6a37765dfab6197292e7a9f47305dcf87386d56a
    # - name: mario-peripheral-animation
    #   remote: gpeye
    #    revision: main 

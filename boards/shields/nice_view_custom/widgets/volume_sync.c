@@ -18,6 +18,10 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/events/keycode_state_changed.h>
 #include <zmk/split/central.h>
 
+#if IS_ENABLED(CONFIG_RAW_HID)
+#include <raw_hid/events.h>
+#endif
+
 #include "volume_sync.h"
 
 // Resend now and then, so a peripheral that reconnected (or restarted) catches up.
@@ -80,11 +84,43 @@ static int handle_keycode(const struct zmk_keycode_state_changed *ev) {
     return ZMK_EV_EVENT_BUBBLE;
 }
 
+#if IS_ENABLED(CONFIG_RAW_HID)
+/*
+ * Real volume from a helper app on the PC, as a raw HID report:
+ *   [0] 0xAB (volume message, same id as zzeneg's qmk-hid-host)
+ *   [1] volume 0-100
+ *   [2] 0 = mute state unknown (keep ours), 1 = not muted, 2 = muted
+ * qmk-hid-host sends only bytes 0-1 and pads with zeros, so it leaves mute alone.
+ */
+#define RAW_HID_VOLUME_MESSAGE 0xAB
+
+static int handle_raw_hid(const struct raw_hid_received_event *ev) {
+    if (ev->length < 2 || ev->data[0] != RAW_HID_VOLUME_MESSAGE) {
+        return ZMK_EV_EVENT_BUBBLE;
+    }
+
+    bool is_muted = muted;
+    if (ev->length >= 3 && ev->data[2] != 0) {
+        is_muted = ev->data[2] == 2;
+    }
+
+    volume_sync_set_percent(ev->data[1], is_muted);
+    return ZMK_EV_EVENT_BUBBLE;
+}
+#endif
+
 static int volume_sync_listener(const zmk_event_t *eh) {
     const struct zmk_keycode_state_changed *key_ev = as_zmk_keycode_state_changed(eh);
     if (key_ev != NULL) {
         return handle_keycode(key_ev);
     }
+
+#if IS_ENABLED(CONFIG_RAW_HID)
+    const struct raw_hid_received_event *hid_ev = as_raw_hid_received_event(eh);
+    if (hid_ev != NULL) {
+        return handle_raw_hid(hid_ev);
+    }
+#endif
 
     const struct zmk_activity_state_changed *act_ev = as_zmk_activity_state_changed(eh);
     if (act_ev != NULL) {
@@ -101,6 +137,9 @@ static int volume_sync_listener(const zmk_event_t *eh) {
 ZMK_LISTENER(volume_sync, volume_sync_listener);
 ZMK_SUBSCRIPTION(volume_sync, zmk_keycode_state_changed);
 ZMK_SUBSCRIPTION(volume_sync, zmk_activity_state_changed);
+#if IS_ENABLED(CONFIG_RAW_HID)
+ZMK_SUBSCRIPTION(volume_sync, raw_hid_received_event);
+#endif
 
 static int volume_sync_init(void) {
     // Give the peripheral time to connect after power-on before the first send.
