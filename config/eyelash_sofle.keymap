@@ -38,6 +38,14 @@
     };
 
     behaviors {
+        // Hold for layer 1; hold together with Shift for layer 2
+        layer_1_shift_2: layer_1_shift_2 {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            display-name = "Layer 1 / Shift: 2";
+            bindings = <&mo 1>, <&mo 2>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
     };
 
     combos {
