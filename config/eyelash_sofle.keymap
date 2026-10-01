@@ -46,6 +46,26 @@
             bindings = <&mo 1>, <&mo 2>;
             mods = <(MOD_LSFT|MOD_RSFT)>;
         };
+
+        // Hold for the layer while held; tap to switch it on until tapped again.
+        // Usage: &hold_tog <layer> <layer>; ZMK Studio shows a layer picker for each.
+        hold_tog: hold_tog {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            display-name = "Layer: hold / tap toggle";
+            flavor = "hold-preferred";
+            tapping-term-ms = <200>;
+            bindings = <&mo>, <&tog>;
+        };
+
+        // Same, for layer 1; with Shift held it does the same for layer 2
+        hold_tog_1_shift_2: hold_tog_1_shift_2 {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            display-name = "Layer 1 / Shift: 2 (hold / tap toggle)";
+            bindings = <&hold_tog 1 1>, <&hold_tog 2 2>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
     };
 
     combos {
