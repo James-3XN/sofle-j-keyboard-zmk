@@ -112,8 +112,8 @@ layers:
   - RGB EFR
   - RGB SPI
   - {t: '$$mdi:menu-right$$', s: '$$mdi:mouse$$'}
-  - RGB BRI
-  - RGB BRD
+  - '&ug_brighter'
+  - '&ug_dimmer'
   - Ins
   - F11
   - F12
