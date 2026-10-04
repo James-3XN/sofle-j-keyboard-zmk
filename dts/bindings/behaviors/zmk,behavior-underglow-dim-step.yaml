@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: MIT
+
+description: Step the underglow brightness through a fixed table that is finer at the low end
+
+compatible: "zmk,behavior-underglow-dim-step"
+
+include: zero_param.yaml
+
+properties:
+  brighter:
+    type: boolean
+    description: Step up instead of down

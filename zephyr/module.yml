@@ -1,3 +1,5 @@
 build:
   settings:
      board_root: .
+     # dts/bindings: the custom underglow brightness-step behavior
+     dts_root: .

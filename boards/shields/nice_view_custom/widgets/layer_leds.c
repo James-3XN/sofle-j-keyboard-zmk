@@ -39,14 +39,12 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/events/hid_indicators_changed.h>
 #endif
 
+#include "layer_leds.h"
 #include "volume_sync.h"
 
 #define STRIP_NODE DT_CHOSEN(zmk_underglow)
 #define STRIP_LEN DT_PROP(STRIP_NODE, chain_length)
 
-// White at the lowest brightness the LEDs can do (1 of 255 per colour). Raise all three
-// equally if it's too faint to see.
-#define INDICATOR_COLOR ((struct led_rgb){.r = 1, .g = 1, .b = 1})
 #define FINDER_COLOR ((struct led_rgb){.r = 80, .g = 80, .b = 80})
 
 // The LEDs need a moment after power-up before they accept data.
@@ -113,6 +111,19 @@ static void show(int index, struct led_rgb color) {
     }
 }
 
+// White at the underglow's current brightness setting, scaled the same way ZMK's underglow
+// scales it, so the indicator matches the underglow step exactly.
+static struct led_rgb indicator_color(void) {
+    uint8_t level = 1;
+#if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW)
+    struct zmk_led_hsb color = zmk_rgb_underglow_calc_brt(0);
+    int scaled = CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN +
+                 (CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX - CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN) * color.b / 100;
+    level = CLAMP(scaled * 255 / 100, 1, 255);
+#endif
+    return (struct led_rgb){.r = level, .g = level, .b = level};
+}
+
 static int wanted_index(void) {
     switch (shown_layer) {
     case 1:
@@ -143,11 +154,13 @@ static void update_work_cb(struct k_work *work) {
         return;
     }
 
-    show(index, INDICATOR_COLOR);
+    show(index, indicator_color());
     if (index < 0) {
         power_release();
     }
 }
+
+void layer_leds_refresh(void) { k_work_reschedule(&update_work, K_NO_WAIT); }
 
 #if IS_ENABLED(CONFIG_LAYER_LEDS_FINDER)
 // Each LED lights for 0.7 s with a 0.3 s gap, in chain order, three rounds with a pause between.
