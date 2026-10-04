@@ -44,8 +44,9 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #define STRIP_NODE DT_CHOSEN(zmk_underglow)
 #define STRIP_LEN DT_PROP(STRIP_NODE, chain_length)
 
-// Dim blue: easy to see without costing much battery.
-#define INDICATOR_COLOR ((struct led_rgb){.r = 0, .g = 25, .b = 90})
+// White at the lowest brightness the LEDs can do (1 of 255 per colour). Raise all three
+// equally if it's too faint to see.
+#define INDICATOR_COLOR ((struct led_rgb){.r = 1, .g = 1, .b = 1})
 #define FINDER_COLOR ((struct led_rgb){.r = 80, .g = 80, .b = 80})
 
 // The LEDs need a moment after power-up before they accept data.
