@@ -117,7 +117,7 @@ layers:
   - Ins
   - F11
   - F12
-  - {t: '$$mdi:transfer$$', type: trans}
+  - '&screen_invert'
   - $$mdi:play-pause$$
   - {t: '$$mdi:transfer$$', type: trans}
   - {t: '$$mdi:transfer$$', type: trans}
