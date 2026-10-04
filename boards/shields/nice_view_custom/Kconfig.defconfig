@@ -53,18 +53,18 @@ config LAYER_LEDS
 
 config LAYER_LEDS_LAYER1_INDEX
     int "Underglow LED (position in the chain, from 0) for layer 1"
-    default 1
+    # 6th LED in the chain, under key 1 (the chain runs right to left)
+    default 5
     depends on LAYER_LEDS
 
 config LAYER_LEDS_LAYER2_INDEX
     int "Underglow LED (position in the chain, from 0) for layer 2"
-    default 2
+    # 5th LED in the chain, under key 2
+    default 4
     depends on LAYER_LEDS
 
 config LAYER_LEDS_FINDER
     bool "Flash each underglow LED in turn at power-on, to find their positions"
-    # Temporarily on, until the LEDs under keys 1 and 2 are confirmed
-    default y
     depends on LAYER_LEDS
 
 endif # !ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL
