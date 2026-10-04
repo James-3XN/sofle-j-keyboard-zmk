@@ -5,6 +5,8 @@
  *
  */
 
+#pragma once
+
 #include <lvgl.h>
 #include <zmk/endpoints.h>
 
@@ -12,10 +14,16 @@
 
 #define CANVAS_SIZE 68
 
-#define LVGL_BACKGROUND                                                                            \
-    IS_ENABLED(CONFIG_NICE_VIEW_WIDGET_INVERTED) ? lv_color_black() : lv_color_white()
-#define LVGL_FOREGROUND                                                                            \
-    IS_ENABLED(CONFIG_NICE_VIEW_WIDGET_INVERTED) ? lv_color_white() : lv_color_black()
+// Colours can be inverted at runtime with the display-invert key (see display_invert.c);
+// CONFIG_NICE_VIEW_WIDGET_INVERTED sets the default until the key is first pressed.
+extern bool nice_view_inverted;
+
+#define LVGL_BACKGROUND (nice_view_inverted ? lv_color_black() : lv_color_white())
+#define LVGL_FOREGROUND (nice_view_inverted ? lv_color_white() : lv_color_black())
+
+// Redraw every part of the screen; implemented by status.c (left) / peripheral_status.c (right).
+// Call only from the display work queue.
+void status_redraw_all(void);
 
 struct status_state {
     uint8_t battery;

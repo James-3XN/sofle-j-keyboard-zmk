@@ -46,6 +46,13 @@
             brighter;
         };
 
+        // Flip both screens between black-on-white and white-on-black (remembered)
+        screen_invert: screen_invert {
+            compatible = "zmk,behavior-display-invert";
+            #binding-cells = <0>;
+            display-name = "Screen invert";
+        };
+
         ug_dimmer: ug_dimmer {
             compatible = "zmk,behavior-underglow-dim-step";
             #binding-cells = <0>;
@@ -145,7 +152,7 @@
 &kp GRAVE   &kp F1           &kp F2          &kp F3           &kp F4           &kp F5             &mmv MOVE_UP     &kp F6           &kp F7           &kp F8      &kp F9     &kp F10           &trans
 &trans      &kp GRAVE        &mkp LCLK       &mkp MCLK        &mkp RCLK        &mkp MB4           &mmv MOVE_DOWN   &kp PG_UP        &kp END          &kp UP      &kp HOME   &kp MINUS         &kp EQUAL
 &trans      &kp TILDE        &trans          &trans           &trans           &mkp MB5           &mmv MOVE_LEFT   &kp PG_DN        &kp LEFT         &kp DOWN    &kp RIGHT  &kp LEFT_BRACKET  &kp RIGHT_BRACKET
-&trans      &rgb_ug RGB_OFF  &rgb_ug RGB_ON  &rgb_ug RGB_EFF  &rgb_ug RGB_EFR  &rgb_ug RGB_SPI    &mmv MOVE_RIGHT  &ug_brighter     &ug_dimmer  &kp INSERT  &kp F11    &kp F12           &trans
+&trans      &rgb_ug RGB_OFF  &rgb_ug RGB_ON  &rgb_ug RGB_EFF  &rgb_ug RGB_EFR  &rgb_ug RGB_SPI    &mmv MOVE_RIGHT  &ug_brighter     &ug_dimmer  &kp INSERT  &kp F11    &kp F12           &screen_invert
 &kp C_PP    &trans           &trans          &trans           &trans           &trans             &mkp LCLK        &trans           &trans           &trans      &trans     &trans
             >;
 

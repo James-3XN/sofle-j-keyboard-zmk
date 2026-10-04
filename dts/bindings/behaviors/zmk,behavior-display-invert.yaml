@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: MIT
+
+description: Toggle the nice!view colours between black-on-white and white-on-black
+
+compatible: "zmk,behavior-display-invert"
+
+include: zero_param.yaml

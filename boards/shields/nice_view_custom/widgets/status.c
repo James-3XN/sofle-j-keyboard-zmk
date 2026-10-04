@@ -310,6 +310,15 @@ ZMK_SUBSCRIPTION(widget_caps_lock_status, zmk_hid_indicators_changed);
 // Each device keeps its own lock state, so re-read it when switching devices.
 ZMK_SUBSCRIPTION(widget_caps_lock_status, zmk_endpoint_changed);
 
+void status_redraw_all(void) {
+    struct zmk_widget_status *widget;
+    SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
+        draw_top(widget->obj, widget->cbuf, &widget->state);
+        draw_middle(widget->obj, widget->cbuf2, &widget->state);
+        draw_bottom(widget->obj, widget->cbuf3, &widget->state);
+    }
+}
+
 int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
     widget->obj = lv_obj_create(parent);
     lv_obj_set_size(widget->obj, 160, 68);
