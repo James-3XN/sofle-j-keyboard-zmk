@@ -6,11 +6,15 @@ whenever they change, over USB or Bluetooth (raw HID, usage page 0xFF60).
 
 Message (32 bytes): [0xAB, volume 0-100, mute 1=off 2=on, 0...]
 
-Run it with pythonw.exe to keep it in the background without a window.
+Run it with pythonw.exe (or as SofleVolumeHelper.exe) to keep it in the
+background without a window; it then logs to
+%LOCALAPPDATA%\\SofleVolumeHelper\\helper.log. To stop it, end
+"SofleVolumeHelper" (or pythonw) in Task Manager.
 It only talks to the keyboard; it makes no network connections.
 """
 
 import logging
+import os
 import sys
 import time
 
@@ -97,15 +101,45 @@ def run():
         time.sleep(POLL_SECONDS)
 
 
+def log_file_path():
+    folder = os.path.join(os.environ.get("LOCALAPPDATA", os.path.expanduser("~")), "SofleVolumeHelper")
+    os.makedirs(folder, exist_ok=True)
+    return os.path.join(folder, "helper.log")
+
+
+def already_running():
+    """True if another copy holds the named mutex (e.g. the .exe was double-clicked twice)."""
+    import ctypes
+
+    ERROR_ALREADY_EXISTS = 183
+    kernel32 = ctypes.windll.kernel32
+    # Keep a reference so the mutex lives as long as the process
+    main.mutex = kernel32.CreateMutexW(None, False, "Local\\SofleVolumeHelper")
+    return kernel32.GetLastError() == ERROR_ALREADY_EXISTS
+
+
 def main():
+    one_off = "--list" in sys.argv or "--selftest" in sys.argv
+    # Check before logging is set up, so a second copy doesn't wipe the first one's log
+    if not one_off and already_running():
+        return
+
+    # The .exe has no console window, so it logs to a small file instead (overwritten each start).
+    has_console = sys.stdout is not None
     logging.basicConfig(
         level=logging.DEBUG if "--verbose" in sys.argv else logging.INFO,
         format="%(asctime)s %(message)s",
+        **({} if has_console else {"filename": log_file_path(), "filemode": "w"}),
     )
     if "--list" in sys.argv:
         for info in hid.enumerate(VENDOR_ID, PRODUCT_ID):
-            print("usage_page=0x%04X usage=0x%02X %s" % (info["usage_page"], info["usage"], info["path"]))
+            log.info("usage_page=0x%04X usage=0x%02X %s", info["usage_page"], info["usage"], info["path"])
         return
+    if "--selftest" in sys.argv:
+        log.info("Volume now: %d%% muted=%s", *read_volume())
+        log.info("Keyboard raw HID found: %s", find_keyboard_path() is not None)
+        return
+    log.info("Started")
     run()
 
 

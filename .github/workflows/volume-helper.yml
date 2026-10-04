@@ -1,0 +1,30 @@
+name: Build volume helper (Windows .exe)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "host/**"
+      - ".github/workflows/volume-helper.yml"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --disable-pip-version-check -r host/requirements.txt pyinstaller==6.22.3
+
+      - name: Build one-file .exe without a console window
+        run: |
+          pyinstaller --onefile --noconsole --name SofleVolumeHelper host/volume_helper.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SofleVolumeHelper
+          path: dist/SofleVolumeHelper.exe
