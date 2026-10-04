@@ -21,5 +21,14 @@
 #define VOLUME_SYNC_MUTED 0x40
 #define VOLUME_SYNC_STEPS_MASK 0x3F
 
+/*
+ * The active layer travels on the same channel as 0b010LLLLL. Real lock-key updates only use
+ * the low five bits (bits 5-7 are always 0) and volume bytes have bit 7 set, so the three can't
+ * be confused.
+ */
+#define LAYER_SYNC_TAG 0x40
+#define LAYER_SYNC_TAG_MASK 0xE0
+#define LAYER_SYNC_LAYER_MASK 0x1F
+
 /* Replace the estimate with a known value, e.g. from a host helper app later on. */
 void volume_sync_set_percent(uint8_t percent, bool muted);

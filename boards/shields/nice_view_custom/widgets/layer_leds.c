@@ -1,12 +1,16 @@
 /*
- * Central half: light one underglow LED while layer 1 or layer 2 is active, all off on layer 0.
+ * Light one underglow LED per half to show the active layer: by default layer 1 on the left
+ * half, layer 2 on the right half, everything off on layer 0 and while the keyboard is idle.
+ *
+ * The left (central) half knows the layer and sends it to the right half over the split
+ * HID-indicator channel (see volume_sync.h for the encoding).
  *
  * Only runs while the full underglow is off (when it's on, its animation owns the strip). The
  * LEDs share a power switch with the underglow; it's switched on when an indicator is needed
- * and back off at layer 0, unless something else had already switched it on.
+ * and back off afterwards, unless something else had already switched it on.
  *
  * CONFIG_LAYER_LEDS_FINDER flashes each LED in turn at power-on, to find which index sits
- * under which key.
+ * where.
  *
  * SPDX-License-Identifier: MIT
  */
@@ -20,17 +24,27 @@
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #include <drivers/ext_power.h>
-#include <zmk/activity.h>
 #include <zmk/event_manager.h>
+#include <zmk/rgb_underglow.h>
+
+#define IS_CENTRAL (!IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL))
+
+#if IS_CENTRAL
+#include <zmk/activity.h>
 #include <zmk/events/activity_state_changed.h>
 #include <zmk/events/layer_state_changed.h>
 #include <zmk/keymap.h>
-#include <zmk/rgb_underglow.h>
+#include <zmk/split/central.h>
+#else
+#include <zmk/events/hid_indicators_changed.h>
+#endif
+
+#include "volume_sync.h"
 
 #define STRIP_NODE DT_CHOSEN(zmk_underglow)
 #define STRIP_LEN DT_PROP(STRIP_NODE, chain_length)
 
-// Dim blue: easy to see under a key without costing much battery.
+// Dim blue: easy to see without costing much battery.
 #define INDICATOR_COLOR ((struct led_rgb){.r = 0, .g = 25, .b = 90})
 #define FINDER_COLOR ((struct led_rgb){.r = 80, .g = 80, .b = 80})
 
@@ -45,6 +59,9 @@ static const struct device *const ext_power = DEVICE_DT_GET(DT_INST(0, zmk_ext_p
 
 static struct led_rgb pixels[STRIP_LEN];
 static bool we_powered;
+
+// Layer to show on this half; 0 = none. On the central it's 0 while the keyboard is idle.
+static uint8_t shown_layer;
 
 #if IS_ENABLED(CONFIG_LAYER_LEDS_FINDER)
 #define FINDER_ROUNDS 3
@@ -96,11 +113,7 @@ static void show(int index, struct led_rgb color) {
 }
 
 static int wanted_index(void) {
-    if (zmk_activity_get_state() != ZMK_ACTIVITY_ACTIVE) {
-        return -1; // dark while the keyboard is idle, even if a layer is toggled on
-    }
-
-    switch (zmk_keymap_highest_layer_active()) {
+    switch (shown_layer) {
     case 1:
         return CONFIG_LAYER_LEDS_LAYER1_INDEX;
     case 2:
@@ -168,14 +181,57 @@ static void finder_work_cb(struct k_work *work) {
 }
 #endif
 
+#if IS_CENTRAL
+// Resend now and then, so a right half that reconnected (or restarted) catches up.
+#define LAYER_RESEND_INTERVAL K_SECONDS(30)
+
+static void send_work_cb(struct k_work *work);
+static K_WORK_DELAYABLE_DEFINE(send_work, send_work_cb);
+
+static void send_work_cb(struct k_work *work) {
+#if IS_ENABLED(CONFIG_ZMK_SPLIT_PERIPHERAL_HID_INDICATORS)
+    zmk_split_central_update_hid_indicator(LAYER_SYNC_TAG |
+                                           (shown_layer & LAYER_SYNC_LAYER_MASK));
+#endif
+    if (zmk_activity_get_state() == ZMK_ACTIVITY_ACTIVE) {
+        k_work_schedule(&send_work, LAYER_RESEND_INTERVAL);
+    }
+}
+
 static int layer_leds_listener(const zmk_event_t *eh) {
-    k_work_reschedule(&update_work, K_NO_WAIT);
+    bool active = zmk_activity_get_state() == ZMK_ACTIVITY_ACTIVE;
+    uint8_t layer = active ? zmk_keymap_highest_layer_active() : 0;
+
+    if (layer != shown_layer || as_zmk_activity_state_changed(eh) != NULL) {
+        shown_layer = layer;
+        k_work_reschedule(&update_work, K_NO_WAIT);
+        k_work_reschedule(&send_work, K_NO_WAIT);
+    }
     return ZMK_EV_EVENT_BUBBLE;
 }
 
 ZMK_LISTENER(layer_leds, layer_leds_listener);
 ZMK_SUBSCRIPTION(layer_leds, zmk_layer_state_changed);
 ZMK_SUBSCRIPTION(layer_leds, zmk_activity_state_changed);
+#else
+// The right half follows whatever the left half last sent.
+static int layer_leds_listener(const zmk_event_t *eh) {
+    const struct zmk_hid_indicators_changed *ev = as_zmk_hid_indicators_changed(eh);
+    if (ev == NULL || (ev->indicators & LAYER_SYNC_TAG_MASK) != LAYER_SYNC_TAG) {
+        return ZMK_EV_EVENT_BUBBLE;
+    }
+
+    uint8_t layer = ev->indicators & LAYER_SYNC_LAYER_MASK;
+    if (layer != shown_layer) {
+        shown_layer = layer;
+        k_work_reschedule(&update_work, K_NO_WAIT);
+    }
+    return ZMK_EV_EVENT_BUBBLE;
+}
+
+ZMK_LISTENER(layer_leds, layer_leds_listener);
+ZMK_SUBSCRIPTION(layer_leds, zmk_hid_indicators_changed);
+#endif
 
 static int layer_leds_init(void) {
     if (!device_is_ready(strip)) {

@@ -46,28 +46,32 @@ config NICE_VIEW_WIDGET_STATUS
     select LV_FONT_MONTSERRAT_18
     select LV_FONT_MONTSERRAT_14
 
+endif # !ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL
+
+# Layer indicator LEDs: layer 1 on the left half, layer 2 on the right half. Index = position
+# in that half's LED chain, from 0; -1 = no LED for that layer on this half.
 config LAYER_LEDS
-    bool "Light an underglow LED while layer 1 or 2 is active"
+    bool "Light an underglow LED for layers 1 and 2"
     default y
     depends on ZMK_RGB_UNDERGLOW
 
 config LAYER_LEDS_LAYER1_INDEX
-    int "Underglow LED (position in the chain, from 0) for layer 1"
-    # 6th LED in the chain, under key 1 (the chain runs right to left)
-    default 5
+    int "Underglow LED for layer 1 on this half (-1 = none)"
+    # Left: 1st LED in the chain (the chain runs right to left, so the inner column)
+    default 0 if !ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL
+    default -1
     depends on LAYER_LEDS
 
 config LAYER_LEDS_LAYER2_INDEX
-    int "Underglow LED (position in the chain, from 0) for layer 2"
-    # 5th LED in the chain, under key 2
-    default 4
+    int "Underglow LED for layer 2 on this half (-1 = none)"
+    # Right: 1st LED in its chain, assuming it mirrors the left half
+    default -1 if !ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL
+    default 0
     depends on LAYER_LEDS
 
 config LAYER_LEDS_FINDER
     bool "Flash each underglow LED in turn at power-on, to find their positions"
     depends on LAYER_LEDS
-
-endif # !ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL
 
 config ZMK_DISPLAY_STATUS_SCREEN_BUILT_IN
     select LV_FONT_MONTSERRAT_26
