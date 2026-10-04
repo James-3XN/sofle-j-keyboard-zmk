@@ -46,6 +46,27 @@ config NICE_VIEW_WIDGET_STATUS
     select LV_FONT_MONTSERRAT_18
     select LV_FONT_MONTSERRAT_14
 
+config LAYER_LEDS
+    bool "Light an underglow LED while layer 1 or 2 is active"
+    default y
+    depends on ZMK_RGB_UNDERGLOW
+
+config LAYER_LEDS_LAYER1_INDEX
+    int "Underglow LED (position in the chain, from 0) for layer 1"
+    default 1
+    depends on LAYER_LEDS
+
+config LAYER_LEDS_LAYER2_INDEX
+    int "Underglow LED (position in the chain, from 0) for layer 2"
+    default 2
+    depends on LAYER_LEDS
+
+config LAYER_LEDS_FINDER
+    bool "Flash each underglow LED in turn at power-on, to find their positions"
+    # Temporarily on, until the LEDs under keys 1 and 2 are confirmed
+    default y
+    depends on LAYER_LEDS
+
 endif # !ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL
 
 config ZMK_DISPLAY_STATUS_SCREEN_BUILT_IN

@@ -93,6 +93,14 @@
             label = "SHIFT_MCLK";
         };
 
+        // Types "00" (two zeros from the number row; works whatever Num Lock is set to)
+        double_zero: double_zero {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            display-name = "00";
+            bindings = <&macro_tap &kp N0 &kp N0>;
+        };
+
         // Revit formulas: jump to the start of the field and type "="
         home_equal: home_equal {
             compatible = "zmk,behavior-macro";
