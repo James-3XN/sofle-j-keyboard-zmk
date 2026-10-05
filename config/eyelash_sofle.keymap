@@ -38,8 +38,11 @@
     };
 
     behaviors {
+        // Behaviors that run on both halves (screen, underglow) need node names of at most
+        // 8 characters: that's all the split link carries when the left half triggers them.
+
         // Underglow brightness in finer steps at the low end (the layer LEDs follow it)
-        ug_brighter: ug_brighter {
+        ug_brighter: ug_bri_u {
             compatible = "zmk,behavior-underglow-dim-step";
             #binding-cells = <0>;
             display-name = "Underglow brighter (fine steps)";
@@ -47,13 +50,13 @@
         };
 
         // Flip both screens between black-on-white and white-on-black (remembered)
-        screen_invert: screen_invert {
+        screen_invert: scr_inv {
             compatible = "zmk,behavior-display-invert";
             #binding-cells = <0>;
             display-name = "Screen invert";
         };
 
-        ug_dimmer: ug_dimmer {
+        ug_dimmer: ug_bri_d {
             compatible = "zmk,behavior-underglow-dim-step";
             #binding-cells = <0>;
             display-name = "Underglow dimmer (fine steps)";
