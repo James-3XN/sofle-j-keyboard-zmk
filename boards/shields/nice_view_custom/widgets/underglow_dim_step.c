@@ -50,13 +50,25 @@ static uint8_t next_step(uint8_t current, bool brighter) {
     return steps[0];
 }
 
+static bool is_brighter(struct zmk_behavior_binding *binding) {
+    const struct device *dev = zmk_behavior_get_binding(binding->behavior_dev);
+    return ((const struct dim_step_config *)dev->config)->brighter;
+}
+
+// Runs on the left half before the key is sent to both halves: param1 becomes the exact target
+// brightness (never 0), so both halves land on the same step even if they differed before.
+static int convert_params(struct zmk_behavior_binding *binding,
+                          struct zmk_behavior_binding_event event) {
+    binding->param1 = next_step(zmk_rgb_underglow_calc_brt(0).b, is_brighter(binding));
+    return 0;
+}
+
 static int on_pressed(struct zmk_behavior_binding *binding,
                       struct zmk_behavior_binding_event event) {
-    const struct device *dev = zmk_behavior_get_binding(binding->behavior_dev);
-    const struct dim_step_config *cfg = dev->config;
-
     struct zmk_led_hsb color = zmk_rgb_underglow_calc_brt(0); // current colour
-    color.b = next_step(color.b, cfg->brighter);
+    color.b = (binding->param1 > 0 && binding->param1 <= 100)
+                  ? binding->param1
+                  : next_step(color.b, is_brighter(binding));
 
     int err = zmk_rgb_underglow_set_hsb(color);
     if (err == 0) {
@@ -74,6 +86,7 @@ static int on_released(struct zmk_behavior_binding *binding,
 }
 
 static const struct behavior_driver_api dim_step_driver_api = {
+    .binding_convert_central_state_dependent_params = convert_params,
     .binding_pressed = on_pressed,
     .binding_released = on_released,
     .locality = BEHAVIOR_LOCALITY_GLOBAL,

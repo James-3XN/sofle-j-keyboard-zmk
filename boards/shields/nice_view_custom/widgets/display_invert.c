@@ -52,9 +52,25 @@ SETTINGS_STATIC_HANDLER_DEFINE(nice_view_invert, "nice_view", NULL, invert_setti
 
 #if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
 
+// param1 after conversion: 1 = set normal, 2 = set inverted (0 = not converted: just flip)
+#define INVERT_SET_NORMAL 1
+#define INVERT_SET_INVERTED 2
+
+// Runs on the left half before the key is sent to both halves: turns "flip" into the exact
+// new state, so both halves end up the same even if they were out of step before.
+static int convert_params(struct zmk_behavior_binding *binding,
+                          struct zmk_behavior_binding_event event) {
+    binding->param1 = nice_view_inverted ? INVERT_SET_NORMAL : INVERT_SET_INVERTED;
+    return 0;
+}
+
 static int on_pressed(struct zmk_behavior_binding *binding,
                       struct zmk_behavior_binding_event event) {
-    nice_view_inverted = !nice_view_inverted;
+    if (binding->param1 == INVERT_SET_NORMAL || binding->param1 == INVERT_SET_INVERTED) {
+        nice_view_inverted = binding->param1 == INVERT_SET_INVERTED;
+    } else {
+        nice_view_inverted = !nice_view_inverted;
+    }
 #if IS_ENABLED(CONFIG_SETTINGS)
     settings_save_one("nice_view/inverted", &nice_view_inverted, sizeof(nice_view_inverted));
 #endif
@@ -68,6 +84,7 @@ static int on_released(struct zmk_behavior_binding *binding,
 }
 
 static const struct behavior_driver_api display_invert_driver_api = {
+    .binding_convert_central_state_dependent_params = convert_params,
     .binding_pressed = on_pressed,
     .binding_released = on_released,
     .locality = BEHAVIOR_LOCALITY_GLOBAL,
