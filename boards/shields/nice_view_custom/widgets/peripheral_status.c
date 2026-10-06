@@ -131,7 +131,7 @@ static void draw_volume_label(lv_obj_t *widget, lv_color_t cbuf[],
     } else {
         snprintf(text, sizeof(text), "%d%%", state->volume_steps * 100 / VOLUME_SYNC_STEPS);
     }
-    lv_canvas_draw_text(canvas, 0, 4, CANVAS_SIZE, &label_dsc, text);
+    draw_text_bold(canvas, 0, 4, CANVAS_SIZE - 1, &label_dsc, text);
 
     rotate_canvas(canvas, cbuf);
 }

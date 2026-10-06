@@ -170,7 +170,7 @@ static void draw_bottom(lv_obj_t *widget, lv_color_t cbuf[], const struct status
     } else {
         snprintf(text, sizeof(text), "DEVICE %d", state->active_profile_index + 1);
     }
-    lv_canvas_draw_text(canvas, 0, 5, 68, &label_dsc, text);
+    draw_text_bold(canvas, 0, 5, 67, &label_dsc, text);
 
     // Rotate canvas
     rotate_canvas(canvas, cbuf);
