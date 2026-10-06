@@ -44,12 +44,16 @@ void draw_battery(lv_obj_t *canvas, const struct status_state *state) {
     }
 }
 
-// Faux bold: the same text twice, 1 px apart, makes every stroke 1 px thicker without
-// widening the text much. Used for labels that read too thin, especially when inverted.
+// Faux bold: the same text four times, 1 px apart horizontally and vertically, so every
+// stroke is 1 px thicker both ways. Used with a smaller font for labels that read too thin,
+// especially when inverted.
 void draw_text_bold(lv_obj_t *canvas, lv_coord_t x, lv_coord_t y, lv_coord_t max_w,
                     lv_draw_label_dsc_t *label_dsc, const char *text) {
-    lv_canvas_draw_text(canvas, x, y, max_w, label_dsc, text);
-    lv_canvas_draw_text(canvas, x + 1, y, max_w, label_dsc, text);
+    for (int dy = 0; dy <= 1; dy++) {
+        for (int dx = 0; dx <= 1; dx++) {
+            lv_canvas_draw_text(canvas, x + dx, y + dy, max_w, label_dsc, text);
+        }
+    }
 }
 
 void init_label_dsc(lv_draw_label_dsc_t *label_dsc, lv_color_t color, const lv_font_t *font,

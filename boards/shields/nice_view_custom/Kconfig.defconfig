@@ -33,6 +33,8 @@ config ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
 config NICE_VIEW_WIDGET_STATUS
     bool "Custom nice!view status widget"
     select LV_FONT_MONTSERRAT_16
+    # Bottom labels (device / volume), drawn faux-bold
+    select LV_FONT_MONTSERRAT_12
     select LV_USE_IMG
     select LV_USE_CANVAS
 

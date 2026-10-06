@@ -158,7 +158,7 @@ static void draw_bottom(lv_obj_t *widget, lv_color_t cbuf[], const struct status
     lv_draw_rect_dsc_t rect_black_dsc;
     init_rect_dsc(&rect_black_dsc, LVGL_BACKGROUND);
     lv_draw_label_dsc_t label_dsc;
-    init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_14, LV_TEXT_ALIGN_CENTER);
+    init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_12, LV_TEXT_ALIGN_CENTER);
 
     // Fill background
     lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
@@ -170,7 +170,7 @@ static void draw_bottom(lv_obj_t *widget, lv_color_t cbuf[], const struct status
     } else {
         snprintf(text, sizeof(text), "DEVICE %d", state->active_profile_index + 1);
     }
-    draw_text_bold(canvas, 0, 5, 67, &label_dsc, text);
+    draw_text_bold(canvas, 0, 6, 67, &label_dsc, text);
 
     // Rotate canvas
     rotate_canvas(canvas, cbuf);

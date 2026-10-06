@@ -119,7 +119,7 @@ static void draw_volume_label(lv_obj_t *widget, lv_color_t cbuf[],
     lv_draw_rect_dsc_t rect_black_dsc;
     init_rect_dsc(&rect_black_dsc, LVGL_BACKGROUND);
     lv_draw_label_dsc_t label_dsc;
-    init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_16, LV_TEXT_ALIGN_CENTER);
+    init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_12, LV_TEXT_ALIGN_CENTER);
 
     lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
 
@@ -131,7 +131,7 @@ static void draw_volume_label(lv_obj_t *widget, lv_color_t cbuf[],
     } else {
         snprintf(text, sizeof(text), "%d%%", state->volume_steps * 100 / VOLUME_SYNC_STEPS);
     }
-    draw_text_bold(canvas, 0, 4, CANVAS_SIZE - 1, &label_dsc, text);
+    draw_text_bold(canvas, 0, 5, CANVAS_SIZE - 1, &label_dsc, text);
 
     rotate_canvas(canvas, cbuf);
 }
