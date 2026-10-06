@@ -41,6 +41,16 @@
         // Behaviors that run on both halves (screen, underglow) need node names of at most
         // 8 characters: that's all the split link carries when the left half triggers them.
 
+        // Custom shift pairs: first binding normally, second with Shift held.
+        // Copy one of these to add another pair; it then shows up in ZMK Studio.
+        under_pipe: under_pipe {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            display-name = "_ / Shift: |";
+            bindings = <&kp UNDER>, <&kp PIPE>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+
         // Underglow brightness in finer steps at the low end (the layer LEDs follow it)
         ug_brighter: ug_bri_u {
             compatible = "zmk,behavior-underglow-dim-step";
