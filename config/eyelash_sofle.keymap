@@ -1,6 +1,11 @@
 #define ZMK_POINTING_DEFAULT_MOVE_VAL 1200  // 600
 #define ZMK_POINTING_DEFAULT_SCRL_VAL 25   // 10
 
+// Keep every built-in behavior in both halves' firmware, not just the ones this file uses.
+// Otherwise a behavior assigned only in ZMK Studio (e.g. Backlight) is missing from the right
+// half, so it ignores it when the left half forwards it.
+#define ZMK_BEHAVIORS_KEEP_ALL
+
 #include <input/processors.dtsi>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 #include <behaviors.dtsi>
