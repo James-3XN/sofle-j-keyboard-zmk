@@ -126,7 +126,8 @@ static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status
     lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
 
     static const int layer_offsets[LAYER_SLOTS][2] = {
-        {16, 16}, {52, 16}, {34, 51},
+        // Equilateral: every pair 36 px apart (y = 16 + 36 * sin 60)
+        {16, 16}, {52, 16}, {34, 47},
     };
 
     int layer_count = MIN(ZMK_KEYMAP_LAYERS_LEN, LAYER_SLOTS);
