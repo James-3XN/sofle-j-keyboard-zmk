@@ -15,6 +15,10 @@
 #include <dt-bindings/zmk/pointing.h>
 #include <dt-bindings/zmk/rgb.h>
 
+// Remove the board's spare USB serial port (only used for debug logging, which is off),
+// so ZMK Studio lists a single USB port: its own, from the studio-rpc-usb-uart snippet.
+/delete-node/ &cdc_acm_uart;
+
 &mmv_input_listener { input-processors = <&zip_xy_scaler 2 1>; };
 
 &msc_input_listener { input-processors = <&zip_scroll_scaler 2 1>; };
