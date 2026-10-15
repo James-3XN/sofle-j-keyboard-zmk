@@ -38,6 +38,14 @@
 &soft_off { hold-time-ms = <2000>; };
 
 / {
+    // Knob: one action per encoder tick (the board default was one per 2 ticks). With 2 ticks
+    // per detent the old setting could leave a 1-tick remainder, so the first click after
+    // reversing only cancelled it and did nothing. Now nothing is left over; each click sends
+    // 2 actions (e.g. 2 volume steps = 4% on Windows).
+    sensors {
+        triggers-per-rotation = <40>;
+    };
+
     scroll_encoder: scroll_encoder {
         compatible = "zmk,behavior-sensor-rotate";
         #sensor-binding-cells = <0>;
