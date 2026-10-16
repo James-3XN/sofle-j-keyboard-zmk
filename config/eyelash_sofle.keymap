@@ -143,11 +143,22 @@
         };
 
         // Revit formulas: jump to the start of the field and type "="
-        home_equal: home_equal {
+        home_eq_macro: home_eq_macro {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            display-name = "Home =";
+            display-name = "Home = (macro only)";
             bindings = <&macro_tap &kp HOME &kp EQUAL>;
+        };
+
+        // The "Home =" key: Home then "=" normally; with Shift held just "=" (Shift is
+        // released for it, so it types "=", not "+"). Keeps the node name home_equal so
+        // keys assigned to it in ZMK Studio pick this up.
+        home_equal: home_equal {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            display-name = "Home = / Shift: =";
+            bindings = <&home_eq_macro>, <&kp EQUAL>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
         };
     };
 
