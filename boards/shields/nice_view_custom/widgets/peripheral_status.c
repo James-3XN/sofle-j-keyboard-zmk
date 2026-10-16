@@ -129,7 +129,7 @@ static void draw_volume_label(lv_obj_t *widget, lv_color_t cbuf[],
     } else if (state->volume_muted) {
         strcpy(text, "MUTE");
     } else {
-        snprintf(text, sizeof(text), "%d%%", state->volume_steps * 100 / VOLUME_SYNC_STEPS);
+        snprintf(text, sizeof(text), "%d %%", state->volume_steps * 100 / VOLUME_SYNC_STEPS);
     }
     // Same font, weight and position as the left screen's device line
     draw_text_bold(canvas, 0, 6, CANVAS_SIZE - 1, &label_dsc, text);
