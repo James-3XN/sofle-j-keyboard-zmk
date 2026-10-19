@@ -17,6 +17,7 @@
 
 #include <string.h>
 #include <zephyr/device.h>
+#include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/led_strip.h>
 #include <zephyr/kernel.h>
 
@@ -77,15 +78,27 @@ static bool underglow_is_on(void) {
 #endif
 }
 
+/*
+ * The LED power switch is driven through its GPIO directly, not ext_power_enable/disable:
+ * those save the power state to flash (60 s later), and flash writes freeze key handling for
+ * up to ~0.7 s. ext_power_get() still tells whether the underglow itself has power on.
+ */
+#if DT_HAS_COMPAT_STATUS_OKAY(zmk_ext_power_generic)
+static const struct gpio_dt_spec power_gpio =
+    GPIO_DT_SPEC_GET(DT_INST(0, zmk_ext_power_generic), control_gpios);
+#endif
+
 // Returns true if power had to be switched on, so the caller should wait before writing.
 static bool power_up(void) {
 #if DT_HAS_COMPAT_STATUS_OKAY(zmk_ext_power_generic)
     if (ext_power_get(ext_power) > 0) {
-        return false;
+        return false; // the underglow has it on already
     }
-    ext_power_enable(ext_power);
+    bool was_on = we_powered;
+    // Set every time: an underglow "off" in the meantime may have switched the pin off
+    gpio_pin_set_dt(&power_gpio, 1);
     we_powered = true;
-    return true;
+    return !was_on;
 #else
     return false;
 #endif
@@ -93,8 +106,8 @@ static bool power_up(void) {
 
 static void power_release(void) {
 #if DT_HAS_COMPAT_STATUS_OKAY(zmk_ext_power_generic)
-    if (we_powered && !underglow_is_on()) {
-        ext_power_disable(ext_power);
+    if (we_powered && ext_power_get(ext_power) <= 0) {
+        gpio_pin_set_dt(&power_gpio, 0);
     }
 #endif
     we_powered = false;
