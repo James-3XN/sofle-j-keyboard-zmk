@@ -5,3 +5,4 @@ tools/
 .west/
 host/.venv/
 host/__pycache__/
+host/keyboard_log_*.txt
