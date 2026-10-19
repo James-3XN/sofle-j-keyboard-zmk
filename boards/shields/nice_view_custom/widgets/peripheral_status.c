@@ -33,7 +33,8 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #define VOLUME_BARS 10
 #define VOLUME_BAR_HEIGHT 8
 #define VOLUME_BAR_GAP 2
-#define VOLUME_BARS_TOP 33
+// Bars span y 37-134: 10 px below the percentage digits and 10 px above the bottom label
+#define VOLUME_BARS_TOP 37
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 

@@ -34,9 +34,10 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #define LAYER_RADIUS 14
 #define LAYER_FILL_RADIUS 10
 
-// Caps box in the top section, under the battery percentage line
-#define CAPS_BOX_Y 33
-#define CAPS_BOX_HEIGHT 30
+// Caps box in the top section: 10 px under the percentage digits (y 37-65), so the circles
+// (76-134) and the device label (145-154) follow with the same 10 px gaps.
+#define CAPS_BOX_Y 37
+#define CAPS_BOX_HEIGHT 29
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -81,7 +82,7 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
         lv_canvas_draw_rect(canvas, FRAME_LEFT + 1, CAPS_BOX_Y + 1, FRAME_WIDTH - 2,
                             CAPS_BOX_HEIGHT - 2, &rect_black_dsc);
     }
-    lv_canvas_draw_text(canvas, FRAME_LEFT, CAPS_BOX_Y + 5, FRAME_WIDTH,
+    lv_canvas_draw_text(canvas, FRAME_LEFT, CAPS_BOX_Y + 4, FRAME_WIDTH,
                         state->caps_lock ? &label_dsc_caps_on : &label_dsc_caps,
                         state->caps_lock ? "CAPS" : "caps");
 
@@ -121,7 +122,7 @@ static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status
     lv_draw_rect_dsc_t rect_black_dsc;
     init_rect_dsc(&rect_black_dsc, LVGL_BACKGROUND);
     lv_draw_arc_dsc_t arc_dsc;
-    init_arc_dsc(&arc_dsc, LVGL_FOREGROUND, 2);
+    init_arc_dsc(&arc_dsc, LVGL_FOREGROUND, OUTLINE_WIDTH);
     lv_draw_arc_dsc_t arc_dsc_filled;
     init_arc_dsc(&arc_dsc_filled, LVGL_FOREGROUND, LAYER_FILL_RADIUS);
     lv_draw_label_dsc_t label_dsc;
@@ -134,11 +135,12 @@ static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status
     lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
 
     // Outer edges on the frame (x 2..65). Equilateral: every pair 35 px apart, so the same
-    // 7 px gap between each pair (y = 19 + 35 * sin 60).
+    // 7 px gap between each pair (y = 22 + 35 * sin 60). Vertically the group spans local
+    // y 8-66 (screen 76-134), 10 px below the Caps box and 10 px above the device label.
     static const int layer_offsets[LAYER_SLOTS][2] = {
-        {FRAME_LEFT + LAYER_RADIUS, 19},
-        {FRAME_LEFT + FRAME_WIDTH - 1 - LAYER_RADIUS, 19},
-        {34, 49},
+        {FRAME_LEFT + LAYER_RADIUS, 22},
+        {FRAME_LEFT + FRAME_WIDTH - 1 - LAYER_RADIUS, 22},
+        {34, 52},
     };
 
     int layer_count = MIN(ZMK_KEYMAP_LAYERS_LEN, LAYER_SLOTS);

@@ -19,8 +19,13 @@
 #define FRAME_LEFT FRAME_MARGIN
 #define FRAME_WIDTH (CANVAS_SIZE - 2 * FRAME_MARGIN)
 
-// The line under the battery icon that holds the battery percentage (top section)
-#define BATTERY_PCT_Y 16
+// The line under the battery icon that holds the battery percentage (top section).
+// Vertical layout, both screens: icon 2-13, percentage digits 17-26, then 10 px gaps between
+// every block down to the bottom label (glyphs 145-154).
+#define BATTERY_PCT_Y 14
+
+// Outline thickness shared by the volume bars, the Caps box and the layer circles
+#define OUTLINE_WIDTH 1
 
 // Colours can be inverted at runtime with the display-invert key (see display_invert.c);
 // CONFIG_NICE_VIEW_WIDGET_INVERTED sets the default until the key is first pressed.
