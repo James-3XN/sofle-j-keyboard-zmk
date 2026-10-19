@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: MIT
+
+description: Show or hide the battery percentage next to the battery icon on both screens
+
+compatible: "zmk,behavior-battery-pct"
+
+include: zero_param.yaml

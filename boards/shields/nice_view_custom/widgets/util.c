@@ -5,6 +5,7 @@
  *
  */
 
+#include <stdio.h>
 #include <zephyr/kernel.h>
 #include "util.h"
 
@@ -41,6 +42,16 @@ void draw_battery(lv_obj_t *canvas, const struct status_state *state) {
         lv_draw_img_dsc_t img_dsc;
         lv_draw_img_dsc_init(&img_dsc);
         lv_canvas_draw_img(canvas, 9, -1, nice_view_inverted ? &bolt_inverted : &bolt, &img_dsc);
+    }
+
+    // Battery percentage in the gap between the icon (ends x 33) and the connection symbol
+    // on the right. Only two digits fit there at 10 px, so a full battery shows 99.
+    if (nice_view_show_battery_pct) {
+        lv_draw_label_dsc_t label_dsc;
+        init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_10, LV_TEXT_ALIGN_LEFT);
+        char text[4];
+        snprintf(text, sizeof(text), "%d", MIN(state->battery, 99));
+        lv_canvas_draw_text(canvas, 35, 3, 14, &label_dsc, text);
     }
 }
 

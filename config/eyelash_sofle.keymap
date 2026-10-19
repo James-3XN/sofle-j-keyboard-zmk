@@ -73,6 +73,13 @@
             display-name = "Custom: Screen invert";
         };
 
+        // Show/hide the battery percentage on both screens (remembered)
+        battery_pct: bat_pct {
+            compatible = "zmk,behavior-battery-pct";
+            #binding-cells = <0>;
+            display-name = "Custom: Battery %";
+        };
+
         ug_dimmer: ug_bri_d {
             compatible = "zmk,behavior-underglow-dim-step";
             #binding-cells = <0>;

@@ -18,6 +18,9 @@
 // CONFIG_NICE_VIEW_WIDGET_INVERTED sets the default until the key is first pressed.
 extern bool nice_view_inverted;
 
+// Battery percentage next to the battery icon, toggled with the battery-% key (battery_pct.c)
+extern bool nice_view_show_battery_pct;
+
 #define LVGL_BACKGROUND (nice_view_inverted ? lv_color_black() : lv_color_white())
 #define LVGL_FOREGROUND (nice_view_inverted ? lv_color_white() : lv_color_black())
 
