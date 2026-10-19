@@ -9,11 +9,13 @@ include:
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n
     artifact-name: eyelash_sofle_studio_left
-  # Diagnostic left half: same firmware, plus ZMK's debug log over USB (key events, Bluetooth
-  # send errors). No ZMK Studio in this one. Flash it only to investigate a problem.
+  # Diagnostic left half: the normal Studio firmware plus ZMK's debug log over USB (key events,
+  # Bluetooth send errors). Studio is needed so the keymap saved from ZMK Studio is loaded.
+  # Both snippets are passed through SNIPPET (the workflow's snippet field takes only one).
+  # Flash it only to investigate a problem.
   - board: eyelash_sofle_left
     shield: nice_view_custom raw_hid_adapter
-    snippet: zmk-usb-logging
+    cmake-args: -DSNIPPET="studio-rpc-usb-uart;zmk-usb-logging" -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n
     artifact-name: eyelash_sofle_left_DIAGNOSTIC
   - board: nice_nano_v2
     shield: settings_reset
