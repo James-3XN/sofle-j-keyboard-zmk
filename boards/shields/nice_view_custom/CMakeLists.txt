@@ -1,17 +1,9 @@
 if(CONFIG_ZMK_DISPLAY AND CONFIG_NICE_VIEW_WIDGET_STATUS)
-  # Firmware version shown by the version key: the commit the build was made from. GitHub
-  # Actions provides it as GITHUB_SHA; local builds fall back to git, then to "local".
-  if(DEFINED ENV{GITHUB_SHA})
-    string(SUBSTRING "$ENV{GITHUB_SHA}" 0 7 NV_FW_VERSION)
+  # Firmware version shown by the version key: "v" + the GitHub Actions build number of the
+  # "Build ZMK firmware" workflow (the #N on the Actions page), e.g. v42. Local builds: "local".
+  if(DEFINED ENV{GITHUB_RUN_NUMBER})
+    set(NV_FW_VERSION "v$ENV{GITHUB_RUN_NUMBER}")
   else()
-    execute_process(
-      COMMAND git -c safe.directory=* rev-parse --short=7 HEAD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-      OUTPUT_VARIABLE NV_FW_VERSION
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      ERROR_QUIET)
-  endif()
-  if(NOT NV_FW_VERSION)
     set(NV_FW_VERSION "local")
   endif()
   zephyr_compile_definitions(NV_FW_VERSION="${NV_FW_VERSION}")
