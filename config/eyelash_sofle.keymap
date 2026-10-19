@@ -80,6 +80,13 @@
             display-name = "Custom: Battery %";
         };
 
+        // Show the firmware version (build commit) instead of the bottom labels, both screens
+        version_toggle: fw_ver {
+            compatible = "zmk,behavior-version-toggle";
+            #binding-cells = <0>;
+            display-name = "Custom: Version";
+        };
+
         ug_dimmer: ug_bri_d {
             compatible = "zmk,behavior-underglow-dim-step";
             #binding-cells = <0>;

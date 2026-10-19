@@ -129,8 +129,10 @@ static void draw_volume_label(lv_obj_t *widget, lv_color_t cbuf[],
 
     lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
 
-    char text[8] = {};
-    if (!state->volume_known) {
+    char text[10] = {};
+    if (nice_view_show_version) {
+        strncpy(text, NV_FW_VERSION, sizeof(text) - 1);
+    } else if (!state->volume_known) {
         strcpy(text, "VOL");
     } else if (state->volume_muted) {
         strcpy(text, "MUTE");

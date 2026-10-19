@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: MIT
+
+description: Show the firmware version in place of the screens' bottom labels (toggle)
+
+compatible: "zmk,behavior-version-toggle"
+
+include: zero_param.yaml

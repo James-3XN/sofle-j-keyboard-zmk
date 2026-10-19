@@ -34,6 +34,13 @@ extern bool nice_view_inverted;
 // Battery percentage next to the battery icon, toggled with the battery-% key (battery_pct.c)
 extern bool nice_view_show_battery_pct;
 
+// Firmware version (build commit) in place of the bottom label, toggled with the version key
+// (version_toggle.c). Not saved: after a restart the normal label is back.
+extern bool nice_view_show_version;
+#ifndef NV_FW_VERSION
+#define NV_FW_VERSION "local"
+#endif
+
 #define LVGL_BACKGROUND (nice_view_inverted ? lv_color_black() : lv_color_white())
 #define LVGL_FOREGROUND (nice_view_inverted ? lv_color_white() : lv_color_black())
 

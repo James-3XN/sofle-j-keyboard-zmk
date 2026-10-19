@@ -180,7 +180,9 @@ static void draw_bottom(lv_obj_t *widget, lv_color_t cbuf[], const struct status
 
     // Active device (the layer is shown by the circles above): "USB" or "DEVICE 1"-"DEVICE 5"
     char text[10] = {};
-    if (state->selected_endpoint.transport == ZMK_TRANSPORT_USB) {
+    if (nice_view_show_version) {
+        strncpy(text, NV_FW_VERSION, sizeof(text) - 1);
+    } else if (state->selected_endpoint.transport == ZMK_TRANSPORT_USB) {
         strcpy(text, "USB");
     } else {
         snprintf(text, sizeof(text), "DEVICE %d", state->active_profile_index + 1);
