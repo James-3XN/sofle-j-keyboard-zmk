@@ -51,10 +51,12 @@ void draw_battery(lv_obj_t *canvas, const struct status_state *state) {
     // When hidden the line stays empty, so nothing else moves.
     if (nice_view_show_battery_pct) {
         lv_draw_label_dsc_t label_dsc;
-        init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT);
+        init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_12, LV_TEXT_ALIGN_CENTER);
         char text[8];
         snprintf(text, sizeof(text), "%d %%", state->battery);
-        draw_text_bold(canvas, x, BATTERY_PCT_Y, FRAME_WIDTH - 1, &label_dsc, text);
+        // Centred under the icon (x 2..35, centre 18.5). The text area is 37 px wide around
+        // that centre, so even "100 %" fits on one line instead of wrapping.
+        draw_text_bold(canvas, 0, BATTERY_PCT_Y, 37, &label_dsc, text);
     }
 }
 
