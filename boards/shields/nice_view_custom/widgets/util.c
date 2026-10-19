@@ -32,26 +32,29 @@ void draw_battery(lv_obj_t *canvas, const struct status_state *state) {
     lv_draw_rect_dsc_t rect_white_dsc;
     init_rect_dsc(&rect_white_dsc, LVGL_FOREGROUND);
 
-    lv_canvas_draw_rect(canvas, 0, 2, 29, 12, &rect_white_dsc);
-    lv_canvas_draw_rect(canvas, 1, 3, 27, 10, &rect_black_dsc);
-    lv_canvas_draw_rect(canvas, 2, 4, (state->battery + 2) / 4, 8, &rect_white_dsc);
-    lv_canvas_draw_rect(canvas, 30, 5, 3, 6, &rect_white_dsc);
-    lv_canvas_draw_rect(canvas, 31, 6, 1, 4, &rect_black_dsc);
+    // Icon starts at the frame's left edge, in line with the volume bars
+    const int x = FRAME_LEFT;
+    lv_canvas_draw_rect(canvas, x, 2, 29, 12, &rect_white_dsc);
+    lv_canvas_draw_rect(canvas, x + 1, 3, 27, 10, &rect_black_dsc);
+    lv_canvas_draw_rect(canvas, x + 2, 4, (state->battery + 2) / 4, 8, &rect_white_dsc);
+    lv_canvas_draw_rect(canvas, x + 30, 5, 3, 6, &rect_white_dsc);
+    lv_canvas_draw_rect(canvas, x + 31, 6, 1, 4, &rect_black_dsc);
 
     if (state->charging) {
         lv_draw_img_dsc_t img_dsc;
         lv_draw_img_dsc_init(&img_dsc);
-        lv_canvas_draw_img(canvas, 9, -1, nice_view_inverted ? &bolt_inverted : &bolt, &img_dsc);
+        lv_canvas_draw_img(canvas, x + 9, -1, nice_view_inverted ? &bolt_inverted : &bolt,
+                           &img_dsc);
     }
 
-    // Battery percentage in the gap between the icon (ends x 33) and the connection symbol
-    // on the right. Only two digits fit there at 10 px, so a full battery shows 99.
+    // Battery percentage on its own line under the icon, same style as the bottom labels.
+    // When hidden the line stays empty, so nothing else moves.
     if (nice_view_show_battery_pct) {
         lv_draw_label_dsc_t label_dsc;
-        init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_10, LV_TEXT_ALIGN_LEFT);
-        char text[4];
-        snprintf(text, sizeof(text), "%d", MIN(state->battery, 99));
-        lv_canvas_draw_text(canvas, 35, 3, 14, &label_dsc, text);
+        init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT);
+        char text[8];
+        snprintf(text, sizeof(text), "%d %%", state->battery);
+        draw_text_bold(canvas, x, BATTERY_PCT_Y, FRAME_WIDTH - 1, &label_dsc, text);
     }
 }
 

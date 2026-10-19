@@ -26,13 +26,14 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include "peripheral_status.h"
 #include "volume_sync.h"
 
-// The bars run down the screen under the battery: bars 10-7 sit in the top section and bars 6-1
-// in the middle one. With these sizes no bar crosses the boundary between the two (y = 68).
+// The bars run down the screen under the battery percentage line, through the top section
+// (y 0-67) and the middle one (y 68-135). Every bar is drawn into both sections at its
+// position on the whole screen; each canvas clips what falls outside it, so a bar that
+// straddles the boundary is drawn half in each.
 #define VOLUME_BARS 10
-#define VOLUME_BAR_HEIGHT 9
+#define VOLUME_BAR_HEIGHT 8
 #define VOLUME_BAR_GAP 2
-#define VOLUME_BARS_TOP 24
-#define VOLUME_BARS_IN_TOP 4
+#define VOLUME_BARS_TOP 33
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -46,9 +47,9 @@ struct volume_status_state {
     uint8_t steps;
 };
 
-// Draw bar rows first..last (row 0 = top bar = bar 10), shifted up by y_offset for this section.
-static void draw_volume_bar_rows(lv_obj_t *canvas, const struct status_state *state, int first,
-                                 int last, int y_offset) {
+// Draw all bars (row 0 = top bar = bar 10), shifted up by y_offset for this section.
+static void draw_volume_bar_rows(lv_obj_t *canvas, const struct status_state *state,
+                                 int y_offset) {
     lv_draw_rect_dsc_t rect_black_dsc;
     init_rect_dsc(&rect_black_dsc, LVGL_BACKGROUND);
     lv_draw_rect_dsc_t rect_white_dsc;
@@ -59,14 +60,18 @@ static void draw_volume_bar_rows(lv_obj_t *canvas, const struct status_state *st
                   ? (state->volume_steps + per_bar - 1) / per_bar
                   : 0;
 
-    for (int i = first; i <= last; i++) {
+    for (int i = 0; i < VOLUME_BARS; i++) {
         int bar = VOLUME_BARS - i;
         int y = VOLUME_BARS_TOP + i * (VOLUME_BAR_HEIGHT + VOLUME_BAR_GAP) - y_offset;
+        if (y >= CANVAS_SIZE || y + VOLUME_BAR_HEIGHT <= 0) {
+            continue; // entirely in the other section
+        }
 
-        lv_canvas_draw_rect(canvas, 2, y, CANVAS_SIZE - 4, VOLUME_BAR_HEIGHT, &rect_white_dsc);
+        lv_canvas_draw_rect(canvas, FRAME_LEFT, y, FRAME_WIDTH, VOLUME_BAR_HEIGHT,
+                            &rect_white_dsc);
         if (bar > lit) {
-            lv_canvas_draw_rect(canvas, 3, y + 1, CANVAS_SIZE - 6, VOLUME_BAR_HEIGHT - 2,
-                                &rect_black_dsc);
+            lv_canvas_draw_rect(canvas, FRAME_LEFT + 1, y + 1, FRAME_WIDTH - 2,
+                                VOLUME_BAR_HEIGHT - 2, &rect_black_dsc);
         }
     }
 }
@@ -85,19 +90,19 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
     // Draw battery
     draw_battery(canvas, state);
 
-    // Draw output status
-    lv_canvas_draw_text(canvas, 0, 0, CANVAS_SIZE, &label_dsc,
+    // Draw output status, right-aligned to the frame's right edge
+    lv_canvas_draw_text(canvas, 0, 0, FRAME_LEFT + FRAME_WIDTH, &label_dsc,
                         state->connected ? LV_SYMBOL_WIFI : LV_SYMBOL_CLOSE);
 
-    // Top four volume bars
-    draw_volume_bar_rows(canvas, state, 0, VOLUME_BARS_IN_TOP - 1, 0);
+    // The part of the volume bars that falls in this section
+    draw_volume_bar_rows(canvas, state, 0);
 
     // Rotate canvas
     rotate_canvas(canvas, cbuf);
 }
 
 // Ten stacked bars, filled from the bottom up; each bar is 5 volume steps (10%).
-// This draws the lower six; draw_top() draws the upper four.
+// This draws the part in the middle section; draw_top() draws the rest.
 static void draw_volume_bars(lv_obj_t *widget, lv_color_t cbuf[],
                              const struct status_state *state) {
     lv_obj_t *canvas = lv_obj_get_child(widget, 1);
@@ -107,7 +112,7 @@ static void draw_volume_bars(lv_obj_t *widget, lv_color_t cbuf[],
 
     lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
 
-    draw_volume_bar_rows(canvas, state, VOLUME_BARS_IN_TOP, VOLUME_BARS - 1, CANVAS_SIZE);
+    draw_volume_bar_rows(canvas, state, CANVAS_SIZE);
 
     rotate_canvas(canvas, cbuf);
 }

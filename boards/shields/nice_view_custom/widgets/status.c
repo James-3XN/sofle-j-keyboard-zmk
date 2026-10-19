@@ -29,10 +29,14 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/keymap.h>
 
 // Layer circles for layers 0-2 in the middle section, styled like the stock profile circles:
-// 0 and 1 in the top corners, 2 centred at the bottom, so they can be larger than the stock 13.
+// 0 and 1 touching the frame's left/right edges, 2 centred below them.
 #define LAYER_SLOTS 3
-#define LAYER_RADIUS 15
-#define LAYER_FILL_RADIUS 11
+#define LAYER_RADIUS 14
+#define LAYER_FILL_RADIUS 10
+
+// Caps box in the top section, under the battery percentage line
+#define CAPS_BOX_Y 33
+#define CAPS_BOX_HEIGHT 30
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -69,12 +73,15 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
     // Fill background
     lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
 
-    // Caps Lock: solid box with "CAPS" when on, outlined "caps" when off
-    lv_canvas_draw_rect(canvas, 4, 28, 60, 30, &rect_white_dsc);
+    // Caps Lock: solid box with "CAPS" when on, outlined "caps" when off. Full frame width,
+    // below the battery percentage line.
+    lv_canvas_draw_rect(canvas, FRAME_LEFT, CAPS_BOX_Y, FRAME_WIDTH, CAPS_BOX_HEIGHT,
+                        &rect_white_dsc);
     if (!state->caps_lock) {
-        lv_canvas_draw_rect(canvas, 5, 29, 58, 28, &rect_black_dsc);
+        lv_canvas_draw_rect(canvas, FRAME_LEFT + 1, CAPS_BOX_Y + 1, FRAME_WIDTH - 2,
+                            CAPS_BOX_HEIGHT - 2, &rect_black_dsc);
     }
-    lv_canvas_draw_text(canvas, 4, 33, 60,
+    lv_canvas_draw_text(canvas, FRAME_LEFT, CAPS_BOX_Y + 5, FRAME_WIDTH,
                         state->caps_lock ? &label_dsc_caps_on : &label_dsc_caps,
                         state->caps_lock ? "CAPS" : "caps");
 
@@ -101,7 +108,8 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
         break;
     }
 
-    lv_canvas_draw_text(canvas, 0, 0, CANVAS_SIZE, &label_dsc, output_text);
+    // Right-aligned to the frame's right edge, in line with the volume bars
+    lv_canvas_draw_text(canvas, 0, 0, FRAME_LEFT + FRAME_WIDTH, &label_dsc, output_text);
 
     // Rotate canvas
     rotate_canvas(canvas, cbuf);
@@ -125,9 +133,12 @@ static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status
     // Fill background
     lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
 
+    // Outer edges on the frame (x 2..65). Equilateral: every pair 35 px apart, so the same
+    // 7 px gap between each pair (y = 19 + 35 * sin 60).
     static const int layer_offsets[LAYER_SLOTS][2] = {
-        // Equilateral: every pair 36 px apart (y = 16 + 36 * sin 60)
-        {16, 16}, {52, 16}, {34, 47},
+        {FRAME_LEFT + LAYER_RADIUS, 19},
+        {FRAME_LEFT + FRAME_WIDTH - 1 - LAYER_RADIUS, 19},
+        {34, 49},
     };
 
     int layer_count = MIN(ZMK_KEYMAP_LAYERS_LEN, LAYER_SLOTS);

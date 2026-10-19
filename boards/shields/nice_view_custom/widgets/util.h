@@ -14,6 +14,14 @@
 
 #define CANVAS_SIZE 68
 
+// Common frame for everything on both screens: the volume bars' width, 2 px in from each edge.
+#define FRAME_MARGIN 2
+#define FRAME_LEFT FRAME_MARGIN
+#define FRAME_WIDTH (CANVAS_SIZE - 2 * FRAME_MARGIN)
+
+// The line under the battery icon that holds the battery percentage (top section)
+#define BATTERY_PCT_Y 16
+
 // Colours can be inverted at runtime with the display-invert key (see display_invert.c);
 // CONFIG_NICE_VIEW_WIDGET_INVERTED sets the default until the key is first pressed.
 extern bool nice_view_inverted;

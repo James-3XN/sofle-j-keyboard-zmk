@@ -35,8 +35,6 @@ config NICE_VIEW_WIDGET_STATUS
     select LV_FONT_MONTSERRAT_16
     # Bottom labels (device / volume), drawn faux-bold
     select LV_FONT_MONTSERRAT_12
-    # Battery percentage next to the battery icon
-    select LV_FONT_MONTSERRAT_10
     select LV_USE_IMG
     select LV_USE_CANVAS
 
