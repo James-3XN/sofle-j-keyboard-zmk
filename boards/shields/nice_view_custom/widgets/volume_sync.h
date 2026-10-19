@@ -32,3 +32,7 @@
 
 /* Replace the estimate with a known value, e.g. from a host helper app later on. */
 void volume_sync_set_percent(uint8_t percent, bool muted);
+
+/* Central only: tell the peripheral the shown layer (0 = none). Never blocks; the send
+ * happens later on the low-priority work queue (volume_sync.c). */
+void split_sync_layer(uint8_t layer);

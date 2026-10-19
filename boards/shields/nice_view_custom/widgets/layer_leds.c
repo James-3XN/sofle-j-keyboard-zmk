@@ -196,22 +196,6 @@ static void finder_work_cb(struct k_work *work) {
 #endif
 
 #if IS_CENTRAL
-// Resend now and then, so a right half that reconnected (or restarted) catches up.
-#define LAYER_RESEND_INTERVAL K_SECONDS(30)
-
-static void send_work_cb(struct k_work *work);
-static K_WORK_DELAYABLE_DEFINE(send_work, send_work_cb);
-
-static void send_work_cb(struct k_work *work) {
-#if IS_ENABLED(CONFIG_ZMK_SPLIT_PERIPHERAL_HID_INDICATORS)
-    zmk_split_central_update_hid_indicator(LAYER_SYNC_TAG |
-                                           (shown_layer & LAYER_SYNC_LAYER_MASK));
-#endif
-    if (zmk_activity_get_state() == ZMK_ACTIVITY_ACTIVE) {
-        k_work_schedule(&send_work, LAYER_RESEND_INTERVAL);
-    }
-}
-
 static int layer_leds_listener(const zmk_event_t *eh) {
     bool active = zmk_activity_get_state() == ZMK_ACTIVITY_ACTIVE;
     uint8_t layer = active ? zmk_keymap_highest_layer_active() : 0;
@@ -219,7 +203,9 @@ static int layer_leds_listener(const zmk_event_t *eh) {
     if (layer != shown_layer || as_zmk_activity_state_changed(eh) != NULL) {
         shown_layer = layer;
         k_work_reschedule(&update_work, K_NO_WAIT);
-        k_work_reschedule(&send_work, K_NO_WAIT);
+        // Never blocks: the send to the right half (and its periodic resend) happens on the
+        // low-priority work queue, see volume_sync.c
+        split_sync_layer(shown_layer);
     }
     return ZMK_EV_EVENT_BUBBLE;
 }
