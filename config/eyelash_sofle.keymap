@@ -55,17 +55,6 @@
     };
 
     behaviors {
-        // Modifier that only works held: a quick lone tap does nothing. Stops a stray Alt tap
-        // from moving Windows' focus to the menu bar. Usage: &hold_only LALT 0
-        hold_only: hold_only {
-            compatible = "zmk,behavior-hold-tap";
-            #binding-cells = <2>;
-            display-name = "Hold only (tap ignored)";
-            flavor = "hold-preferred";
-            tapping-term-ms = <200>;
-            bindings = <&kp>, <&none>;
-        };
-
         // Behaviors that run on both halves (screen, underglow) need node names of at most
         // 8 characters: that's all the split link carries when the left half triggers them.
 
@@ -153,6 +142,23 @@
             bindings = <&macro_tap &kp N0 &kp N0>;
         };
 
+        // Left Alt that never activates Windows' menu bar on its own. Windows does that only
+        // when Alt goes down and up with nothing in between, so an unused key (F24) is tapped
+        // just before Alt is released. Alt + key and Alt + mouse work as normal.
+        alt_masked: alt_masked {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            display-name = "Alt (no menu on its own)";
+            wait-ms = <0>;
+            tap-ms = <5>;
+            bindings
+                = <&macro_press &kp LALT>
+                , <&macro_pause_for_release>
+                , <&macro_tap &kp F24>
+                , <&macro_release &kp LALT>
+                ;
+        };
+
         // Revit formulas: jump to the start of the field and type "="
         home_eq_macro: home_eq_macro {
             compatible = "zmk,behavior-macro";
@@ -182,7 +188,7 @@
 &kp TAB     &kp Q      &kp W         &kp E         &kp R   &kp T        &kp DOWN_ARROW   &kp Y      &kp U      &kp I      &kp O            &kp P       &kp BSLH
 &kp CAPS    &kp A      &kp S         &kp D         &kp F   &kp G        &kp LEFT_ARROW   &kp H      &kp J      &kp K      &kp L            &kp SEMI    &kp APOS
 &kp LSHFT   &kp Z      &kp X         &kp C         &kp V   &kp B        &kp RIGHT_ARROW  &kp N      &kp M      &kp COMMA  &kp DOT          &kp FSLH    &kp ENTER
-&kp C_MUTE  &kp LCTRL  &kp LEFT_GUI  &hold_only LALT 0  &mo 1   &kp SPACE    &kp ENTER        &kp SPACE  &kp ENTER  &mo 2      &kp RIGHT_SHIFT  &kp DELETE
+&kp C_MUTE  &kp LCTRL  &kp LEFT_GUI  &alt_masked  &mo 1   &kp SPACE    &kp ENTER        &kp SPACE  &kp ENTER  &mo 2      &kp RIGHT_SHIFT  &kp DELETE
             >;
 
             sensor-bindings = <&inc_dec_kp C_VOLUME_UP C_VOL_DN>;
