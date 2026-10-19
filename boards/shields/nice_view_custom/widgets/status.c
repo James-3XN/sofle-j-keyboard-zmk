@@ -32,8 +32,8 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 // 0 and 1 touching the frame's left/right edges, 2 centred below them.
 #define LAYER_SLOTS 3
 #define LAYER_RADIUS 14
-// Filled centre of the active layer: 2 px gap inside the 1 px ring, like the stock circles
-#define LAYER_FILL_RADIUS 11
+// Filled centre of the active layer: 1 px gap inside the 1 px ring
+#define LAYER_FILL_RADIUS 12
 
 // Caps box in the top section: 10 px under the percentage digits (y 37-65), so the circles
 // (76-134) and the device label (145-154) follow with the same 10 px gaps.
