@@ -12,6 +12,59 @@
 LV_IMG_DECLARE(bolt);
 LV_IMG_DECLARE(bolt_inverted);
 
+#if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW)
+#include <zmk/rgb_underglow.h>
+#endif
+
+// After the LEDs go off, wait this long for the battery voltage to recover before trusting it
+#define BATTERY_RECOVERY_MS (60 * 1000)
+
+static int shown_level = -1; // -1 = nothing shown yet
+static bool last_usb_present;
+static bool layer_leds_on;
+static bool leds_were_on;
+static int64_t hold_until_ms;
+
+void battery_display_leds_changed(bool on) {
+    layer_leds_on = on;
+    if (!on) {
+        hold_until_ms = k_uptime_get() + BATTERY_RECOVERY_MS;
+    }
+}
+
+static bool leds_drawing_current(void) {
+    bool underglow_on = false;
+#if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW)
+    zmk_rgb_underglow_get_state(&underglow_on);
+#endif
+    return underglow_on || layer_leds_on;
+}
+
+uint8_t battery_display_level(uint8_t raw, bool usb_present) {
+    int64_t now = k_uptime_get();
+    bool leds_on = leds_drawing_current();
+
+    // Underglow switched off since the last reading: let the voltage recover first
+    if (leds_were_on && !leds_on) {
+        hold_until_ms = now + BATTERY_RECOVERY_MS;
+    }
+    leds_were_on = leds_on;
+
+    if (usb_present != last_usb_present || shown_level < 0) {
+        // Plugged in or unplugged (or first reading): start fresh
+        last_usb_present = usb_present;
+        shown_level = raw;
+    } else if (usb_present) {
+        shown_level = raw; // charging: follow the reading
+    } else if (leds_on || now < hold_until_ms) {
+        // keep the last good value while the LEDs pull the voltage down
+    } else if (raw < shown_level) {
+        shown_level = raw; // unplugged: only ever goes down
+    }
+
+    return shown_level;
+}
+
 void rotate_canvas(lv_obj_t *canvas, lv_color_t cbuf[]) {
     static lv_color_t cbuf_tmp[CANVAS_SIZE * CANVAS_SIZE];
     memcpy(cbuf_tmp, cbuf, sizeof(cbuf_tmp));

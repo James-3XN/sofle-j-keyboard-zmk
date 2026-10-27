@@ -199,7 +199,7 @@ static void set_battery_status(struct zmk_widget_status *widget,
     widget->state.charging = state.usb_present;
 #endif /* IS_ENABLED(CONFIG_USB_DEVICE_STACK) */
 
-    widget->state.battery = state.level;
+    widget->state.battery = battery_display_level(state.level, widget->state.charging);
 
     draw_top(widget->obj, widget->cbuf, &widget->state);
 }

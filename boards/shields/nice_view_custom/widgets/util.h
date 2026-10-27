@@ -76,6 +76,17 @@ struct battery_status_state {
 #endif
 };
 
+/*
+ * Battery level as shown on screen (util.c). The raw level is a voltage reading, which sags
+ * heavily while the underglow/layer LEDs draw current and wobbles by ~1%. Shown level:
+ * - charging (USB power): the raw reading
+ * - LEDs on, or within 60 s after they went off: held at the last good value
+ * - otherwise: may only go down until the next plug/unplug
+ */
+uint8_t battery_display_level(uint8_t raw, bool usb_present);
+// Called by the layer LEDs when they switch the LED power on/off
+void battery_display_leds_changed(bool on);
+
 void rotate_canvas(lv_obj_t *canvas, lv_color_t cbuf[]);
 void draw_battery(lv_obj_t *canvas, const struct status_state *state);
 void draw_text_bold(lv_obj_t *canvas, lv_coord_t x, lv_coord_t y, lv_coord_t max_w,

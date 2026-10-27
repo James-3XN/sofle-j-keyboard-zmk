@@ -41,6 +41,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #endif
 
 #include "layer_leds.h"
+#include "util.h"
 #include "volume_sync.h"
 
 #define STRIP_NODE DT_CHOSEN(zmk_underglow)
@@ -98,6 +99,9 @@ static bool power_up(void) {
     // Set every time: an underglow "off" in the meantime may have switched the pin off
     gpio_pin_set_dt(&power_gpio, 1);
     we_powered = true;
+    if (!was_on) {
+        battery_display_leds_changed(true); // battery voltage reads low while LEDs are on
+    }
     return !was_on;
 #else
     return false;
@@ -108,6 +112,9 @@ static void power_release(void) {
 #if DT_HAS_COMPAT_STATUS_OKAY(zmk_ext_power_generic)
     if (we_powered && ext_power_get(ext_power) <= 0) {
         gpio_pin_set_dt(&power_gpio, 0);
+    }
+    if (we_powered) {
+        battery_display_leds_changed(false);
     }
 #endif
     we_powered = false;
