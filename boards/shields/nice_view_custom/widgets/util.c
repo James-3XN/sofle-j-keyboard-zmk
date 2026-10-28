@@ -41,6 +41,13 @@ static bool leds_drawing_current(void) {
 }
 
 uint8_t battery_display_level(uint8_t raw, bool usb_present) {
+    // ZMK reports 0 until its first battery measurement after start-up. Treat it as "no
+    // reading yet": taking it as the first value made the only-go-down rule hold 0 forever.
+    // (A battery that really reads 0 has already switched the keyboard off.)
+    if (raw == 0) {
+        return shown_level > 0 ? shown_level : 0;
+    }
+
     int64_t now = k_uptime_get();
     bool leds_on = leds_drawing_current();
 
