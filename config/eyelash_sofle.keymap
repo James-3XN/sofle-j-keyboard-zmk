@@ -157,6 +157,15 @@
             bindings = <&macro_tap &kp N0 &kp N0>;
         };
 
+        // Esc normally, "`" with Shift (Shift is released for it, so "`" and not "~")
+        esc_grave: esc_grave {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            display-name = "Custom: Esc / Shift: `";
+            bindings = <&kp ESC>, <&kp GRAVE>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
+
         // "_" normally, "." with Shift (Shift is released for it, so "." and not ">")
         under_dot: under_dot {
             compatible = "zmk,behavior-mod-morph";
