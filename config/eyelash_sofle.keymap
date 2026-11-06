@@ -166,7 +166,7 @@
             #binding-cells = <0>;
             display-name = "Custom: Next track on Device 3";
             bindings
-                = <&macro_wait_time 1000>
+                = <&macro_wait_time 1500>
                 , <&macro_tap &bt BT_SEL 2>
                 , <&macro_wait_time 300>
                 , <&macro_tap &kp C_NEXT>
@@ -179,7 +179,7 @@
             #binding-cells = <0>;
             display-name = "Custom: Previous track on Device 3";
             bindings
-                = <&macro_wait_time 1000>
+                = <&macro_wait_time 1500>
                 , <&macro_tap &bt BT_SEL 2>
                 , <&macro_wait_time 300>
                 , <&macro_tap &kp C_PREV>
@@ -192,7 +192,7 @@
             #binding-cells = <0>;
             display-name = "Custom: Play/Pause on Device 3";
             bindings
-                = <&macro_wait_time 1000>
+                = <&macro_wait_time 1500>
                 , <&macro_tap &bt BT_SEL 2>
                 , <&macro_wait_time 300>
                 , <&macro_tap &kp C_PP>
