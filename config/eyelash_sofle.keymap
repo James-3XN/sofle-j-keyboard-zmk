@@ -157,6 +157,23 @@
             bindings = <&macro_tap &kp N0 &kp N0>;
         };
 
+        // Skip track on Device 3 while working on Device 2: switch to Device 3, wait for it to
+        // connect, send Next Track, switch back to Device 2. Takes a few seconds; typing during it
+        // does not reach Device 2. Raise the 2500 if the skip gets lost (Device 3 slow to connect).
+        // Note: each device switch is saved to flash ~60 s later (stock ZMK).
+        next_on_dev3: next_on_dev3 {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            display-name = "Custom: Next track on Device 3";
+            bindings
+                = <&macro_wait_time 2500>
+                , <&macro_tap &bt BT_SEL 2>
+                , <&macro_wait_time 300>
+                , <&macro_tap &kp C_NEXT>
+                , <&macro_tap &bt BT_SEL 1>
+                ;
+        };
+
         // Esc normally, "`" with Shift (Shift is released for it, so "`" and not "~")
         esc_grave: esc_grave {
             compatible = "zmk,behavior-mod-morph";
